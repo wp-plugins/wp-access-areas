@@ -77,6 +77,11 @@ Either post it on [GitHub](https://github.com/mcguffin/wp-access-areas) or—if 
 
 == Changelog ==
 
+= 1.1.3 =
+Fix: post tables did not update on wpmu_new_blog
+Fix: [deletion issue](http://wordpress.org/support/topic/bug-report-cant-delete-area?replies=1)
+Localize Plugin description
+
 = 1.1.2 =
 Added versioncheck
 
@@ -92,4 +97,4 @@ Initial Release
 
 == Upgrade notice ==
 
-
+Everybody using the plugin in Multisite context should update to version 1.1.3.
