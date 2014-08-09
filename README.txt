@@ -3,7 +3,7 @@ Contributors: podpirate
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WF4Z3HU93XYJA
 Tags: access, role, capability, user, security, editor
 Requires at least: 3.5
-Tested up to: 3.9
+Tested up to: 4.0-beta3
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -20,7 +20,8 @@ even custom Access Areas.
 - Define custom Access Areas and assign them to your blog-users
 - Restrict reading, editing and commenting permission to logged-in users, certain WordPress-Roles or Access Areas
 - define global access areas on a network
-- German localization
+- Supports bulk editing
+- German and swedish localization
 - Clean uninstall
 
 Latest files on [GitHub](https://github.com/mcguffin/wp-access-areas).
@@ -74,6 +75,7 @@ Use the GitHub Repo rather than the WordPress Plugin. Do as follows:
 
 Either post it on [GitHub](https://github.com/mcguffin/wp-access-areas) or—if you are working on a cloned repository—send me a pull request.
 
+
 == Screenshots ==
 
 1. Area Access Manager
@@ -83,10 +85,16 @@ Either post it on [GitHub](https://github.com/mcguffin/wp-access-areas) or—if 
 
 == Changelog ==
 
+= 1.2.6 =
+Feature: Option to select post status after deleting access area
+Fix: Wrong viewing permissions after delete access area
+Fix: remove options upon uninstall
+Swedish localization
+
 = 1.2.5 =
 Feature: Bulk edit users: Grant and revoke access.
+Fix: Was able to create access areas with empty names.
 Fix: Ignores WP's Comments closed status
-Fix: Removed ability to create access areas with empty names.
 
 = 1.2.4 =
 Fix: User list table column
