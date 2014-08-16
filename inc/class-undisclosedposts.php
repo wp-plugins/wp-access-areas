@@ -64,10 +64,8 @@ class UndisclosedPosts {
 					// no fallback? take default value
 					if ( ! $fallback_page_id )
 						$fallback_page_id = get_option( 'wpaa_fallback_page' );
-					
-					$fallback_page = get_post( $fallback_page_id );
-					
-					if ( wpaa_user_can( $fallback_page->post_view_cap ) && $fallback_page->post_status == 'publish' ) {
+										
+					if ( $fallback_page_id && wpaa_is_post_public( $fallback_page_id ) ) {
 						// if accessable take user to the fallback page
 						$redirect = get_permalink( $fallback_page_id );
 					} else {
@@ -203,7 +201,6 @@ class UndisclosedPosts {
 		// not true on multisite
 		if ( is_singular() || ( ! is_multisite() && current_user_can('administrator') ) )
 			return $where;
-		
 		$caps = array('exist');
 		if ( is_user_logged_in() ) {
 			// get current user's groups
