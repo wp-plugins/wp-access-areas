@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: access, role, capability, user, security, editor
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 1.3.0
+Stable tag: 1.3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -75,10 +75,13 @@ Use the GitHub Repo rather than the WordPress Plugin. Do as follows:
 
 4. If you want to update to the latest files (be careful, might be untested on Your WP-Version) type git pull´.
 
+Please note that the GitHub repository is more likely to contain unstable and untested code. Urgent fixes 
+concerning stability or security (like crashes, vulnerabilities and alike) are more likely to be fixed in 
+the official WP plugin repository first.
+
 = I found a bug and fixed it. How can I contribute? =
 
 Either post it on [GitHub](https://github.com/mcguffin/wp-access-areas) or—if you are working on a cloned repository—send me a pull request.
-
 
 == Screenshots ==
 
@@ -88,6 +91,10 @@ Either post it on [GitHub](https://github.com/mcguffin/wp-access-areas) or—if 
 4. Post Access Behaviour
 
 == Changelog ==
+
+= 1.3.1 =
+- Fix: Possible vulnerability where unauthorized users could change post access settings
+- L10n: change plugin textdomain from 'wpundisclosed' to 'wp-access-areas' (= Plugin slug). Rename lang/ > languages/.
 
 = 1.3.0 =
  - WordPress 4.0 compatibility
