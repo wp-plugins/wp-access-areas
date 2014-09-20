@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: access, role, capability, user, security, editor
 Requires at least: 3.5
 Tested up to: 4.0
-Stable tag: 1.3.1
+Stable tag: 1.3.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -91,6 +91,9 @@ Either post it on [GitHub](https://github.com/mcguffin/wp-access-areas) or—if 
 4. Post Access Behaviour
 
 == Changelog ==
+
+= 1.3.2 =
+- Security Fix: Exclude restricted posts from comment feeds
 
 = 1.3.1 =
 - Fix: Possible vulnerability where unauthorized users could change post access settings
