@@ -8,8 +8,8 @@
 //	Data model for Userlabels.
 // ----------------------------------------
 
-if ( ! class_exists('UndisclosedUserlabel') ):
-class UndisclosedUserlabel {
+if ( ! class_exists('WPAA_AccessArea') ):
+class WPAA_AccessArea {
 	
 	private static $_what_went_wrong = 0;
 	private static $_query_cache = array();
@@ -71,9 +71,12 @@ class UndisclosedUserlabel {
 		$labels = self::get_available_userlabels( );
 		$label_map = array();
 		foreach ( $labels as $item ) {
-			$label_map[$item->capability] = $item->cap_title;
-			if ( is_multisite() && ! $item->blog_id ) 
-				$label_map[$item->capability] .= ' '.__('(Network)','wpundisclosed');
+			$label_map[$item->capability] = array(
+				'title' => $item->cap_title,
+				'global' => is_multisite() && ! $item->blog_id,
+			);
+// 			if ( is_multisite() && ! $item->blog_id ) 
+// 				$label_map[$item->capability] .= ' '.__('(Network)','wp-access-areas');
 		}
 		return $label_map;
 	}
@@ -122,7 +125,7 @@ class UndisclosedUserlabel {
 		global $wpdb;
 		$post_status_sql = '';
 		$default_post_status = get_option('wpaa_default_post_status');
-		if ( $default_post_status  && in_array( $default_post_status , UndisclosedSettings::get_post_stati( ) ) )
+		if ( $default_post_status  && in_array( $default_post_status , WPAA_Settings::get_post_stati( ) ) )
 			$post_status_sql = $wpdb->prepare(" , post_status=%s " , $default_post_status );
 			
 		// delete everything from posts and restore usefull default values

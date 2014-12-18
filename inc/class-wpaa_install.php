@@ -9,9 +9,9 @@
 //	routines for the WP Access Areas plugin.
 // ----------------------------------------
 
-if ( ! class_exists('UndisclosedInstall') ) :
+if ( ! class_exists('WPAA_Install') ) :
 
-class UndisclosedInstall {
+class WPAA_Install {
 	
 	// --------------------------------------------------
 	// de-/activation/uninstall hooks
@@ -68,7 +68,8 @@ class UndisclosedInstall {
 	function activate_for_blog( $blog_id ) {
 		switch_to_blog( $blog_id );
 		self::_install_posts_table( );
-		self::install_role_caps();
+		// will break during install, wp-admin/includes/users.php not loaded.
+		// self::install_role_caps();
 		restore_current_blog();
 	}
 	private static function _remove_options() {
@@ -116,25 +117,34 @@ class UndisclosedInstall {
 	// --------------------------------------------------
 	public static function install_role_caps() {
 		global $wp_roles;
+		if ( ! function_exists( 'get_editable_roles' ) )
+			require_once( ABSPATH . '/wp-admin/includes/user.php' );
 		$roles = get_editable_roles();
 		foreach ( array_keys($roles) as $role_slug ) {
 			$role = get_role($role_slug);
 			if ( $role->has_cap( 'publish_posts' ) ) {
-				$role->add_cap( 'wpaa_set_view_cap' );
-				$role->add_cap( 'wpaa_set_comment_cap' );
+				if ( ! $role->has_cap( 'wpaa_set_view_cap' ) )
+					$role->add_cap( 'wpaa_set_view_cap' );
+				if ( ! $role->has_cap( 'wpaa_set_comment_cap' ) )
+					$role->add_cap( 'wpaa_set_comment_cap' );
 			}
-			if ( $role->has_cap( 'edit_others_posts' ) ) {
+			if ( $role->has_cap( 'edit_others_posts' ) && ! $role->has_cap( 'wpaa_set_edit_cap' ) ) {
 				$role->add_cap( 'wpaa_set_edit_cap' );
 			}
 		}
 	}
 	public static function uninstall_role_caps() {
+		if ( ! function_exists( 'get_editable_roles' ) )
+			require_once( ABSPATH . '/wp-admin/includes/user.php' );
 		$roles = get_editable_roles();
 		foreach ( array_keys($roles) as $role_slug ) {
 			$role = get_role($role_slug);
-			$role->remove_cap( 'wpaa_set_view_cap' );
-			$role->remove_cap( 'wpaa_set_edit_cap' );
-			$role->remove_cap( 'wpaa_set_comment_cap' );
+			if ( $role->has_cap( 'wpaa_set_view_cap' ) )
+				$role->remove_cap( 'wpaa_set_view_cap' );
+			if ( $role->has_cap( 'wpaa_set_edit_cap' ) )
+				$role->remove_cap( 'wpaa_set_edit_cap' );
+			if ( $role->has_cap( 'wpaa_set_comment_cap' ) )
+				$role->remove_cap( 'wpaa_set_comment_cap' );
 		}
 	}
 	// --------------------------------------------------

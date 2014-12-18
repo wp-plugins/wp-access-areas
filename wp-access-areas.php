@@ -9,11 +9,8 @@ Plugin Name: WordPress Access Areas
 Plugin URI: http://wordpress.org/plugins/wp-access-areas/
 Description: Lets you define Access Areas and assign them to Posts, Pages and Custom Post types. Through Access Areas you can fine-tune who can view, edit or comment on your posts.
 Author: Jörn Lund
-Version: 1.3.0
+Version: 1.4.0
 Author URI: https://github.com/mcguffin/
-
-Text Domain: wpundisclosed
-Domain Path: /lang/
 */
 
 /*
@@ -24,12 +21,10 @@ UX:
 - Pages list: show fallback page note
 FEATURE:
 - set fallback page per local access area (manage page deletions!)
-- add cap wpaa_restrict_access to Administrator + Editor role (or any other role with editing capabilities)
-- UI: add / revoke access restricting cap for role
 */
 
 // table name for userlabels
-define( 'WPUND_VERSION' , "1.3.0"); // edit-col came with 1.1.0
+define( 'WPUND_VERSION' , "1.4.0"); // edit-col came with 1.1.0
 define( 'WPUND_USERLABEL_TABLE' , "disclosure_userlabels");
 define( 'WPUND_USERLABEL_PREFIX' , "userlabel_");
 define( 'WPUND_GLOBAL_USERMETA_KEY' , "undisclosed_global_capabilities");
@@ -59,37 +54,40 @@ spl_autoload_register( 'wpaa_autoload' );
 require_once( dirname(__FILE__). '/inc/wpaa_roles.php' );
 
 // common plugin functions
-UndisclosedCore::init();
-UndisclosedPosts::init();
+WPAA_Core::init();
+WPAA_Posts::init();
 
 
 /**
  * Activation hook
  */
 function accessareas_activate() {
-	UndisclosedInstall::activate();
+	WPAA_Install::activate();
 }
 
 /**
  * Deactivation hook
  */
 function accessareas_deactivate() {
-	UndisclosedInstall::deactivate();
+	WPAA_Install::deactivate();
 }
 
 /**
  * Uninstall hook
  */
 function accessareas_uninstall() {
-	UndisclosedInstall::uninstall();
+	WPAA_Install::uninstall();
 }
 
-// access area data model 
 if ( is_admin() ) {
-	UndisclosedCaps::init();
-	UndisclosedUsers::init();
-	UndisclosedEditPost::init();
-	UndisclosedSettings::init();
+	// access area data model 
+	WPAA_Caps::init();
+	// access user profiles
+	WPAA_Users::init();
+	// access posts editing
+	WPAA_EditPost::init();
+	// access options
+	WPAA_Settings::init();
 }
 register_activation_hook( __FILE__ , 'accessareas_activate' );
 register_deactivation_hook( __FILE__ , 'accessareas_deactivate' );
