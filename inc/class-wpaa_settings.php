@@ -8,9 +8,9 @@
 //	This class provides an interface for editing access areas
 // ----------------------------------------
 
-if ( ! class_exists('UndisclosedSettings' ) ) :
+if ( ! class_exists('WPAA_Settings' ) ) :
 
-class UndisclosedSettings {
+class WPAA_Settings {
 	private static $post_stati;
 	private static $role_caps;
 
@@ -42,7 +42,7 @@ class UndisclosedSettings {
 		add_action( 'load-settings_page_wpaa_settings' , array( __CLASS__ , 'load_style' ) );
 	}
 	static function load_style() {
-		wp_enqueue_style( 'disclosure-admin' );
+		wp_enqueue_style( 'wpaa-admin' );
 	}
 	static function enable_assign_cap( $old_value , $new_value ) {
 		if ( $new_value && ! $old_value  ) {
@@ -52,7 +52,7 @@ class UndisclosedSettings {
 				! $admin_role->has_cap('wpaa_set_edit_cap')  ||
 				! $admin_role->has_cap('wpaa_set_comment_cap') ) {
 
-				UndisclosedInstall::install_role_caps();
+				WPAA_Install::install_role_caps();
 			}
 		}
 	}
@@ -141,7 +141,7 @@ class UndisclosedSettings {
 			$rolenames[$role] = $rolename;
 		}
 		
-		$groups = UndisclosedUserlabel::get_label_array( );
+		$groups = WPAA_AccessArea::get_label_array( );
 		?><table class="wp-list-table widefat set-default-caps"><?php
 			?><thead><?php
 				?><tr><?php
@@ -199,14 +199,14 @@ class UndisclosedSettings {
 					$action = 'post_view_cap';
 					$cap = isset($option_values[$post_type][$action] )?$option_values[$post_type][$action] : 'exist';
 					if ( $post_type != 'attachment' && ( $post_type_object->public || $post_type_object->show_ui)  )
-						UndisclosedEditPost::access_area_dropdown(  $roles , $groups , 
+						WPAA_Template::access_area_dropdown(  $roles , $groups , 
 							wpaa_sanitize_access_cap( $cap ) , 
 							"wpaa_default_caps[$post_type][$action]"  );
 				?></td><?php
 				?><td><?php
 					$action = 'post_edit_cap';
 					$cap = isset($option_values[$post_type][$action] )?$option_values[$post_type][$action] : 'exist';
-					UndisclosedEditPost::access_area_dropdown(  $edit_rolenames , $groups , 
+					WPAA_Template::access_area_dropdown(  $edit_rolenames , $groups , 
 						wpaa_sanitize_access_cap( $cap ) , 
 						"wpaa_default_caps[$post_type][$action]"  );
 				?></td><?php
@@ -214,7 +214,7 @@ class UndisclosedSettings {
 					$action = 'post_comment_cap';
 					$cap = isset($option_values[$post_type][$action] )?$option_values[$post_type][$action] : 'exist';
 					if ( post_type_supports( $post_type , 'comments' ) )
-						UndisclosedEditPost::access_area_dropdown(  $roles , $groups , 
+						WPAA_Template::access_area_dropdown(  $roles , $groups , 
 							wpaa_sanitize_access_cap( $cap ) , 
 							"wpaa_default_caps[$post_type][$action]"  );
 				?></td><?php
@@ -253,28 +253,27 @@ class UndisclosedSettings {
 				$alternate = false;
 				foreach ( $roles as $role_slug => $role_details ) {
 					$role = get_role( $role_slug );
-					$alternate = !$alternate;
-					?><tr class="role-select <?php if ( $alternate ) echo "alternate" ?>"><?php
-					?><th><?php
-						echo translate_user_role( $role_details['name'] );
-					?></th><?php
-					foreach ( array_keys( self::$role_caps ) as $cap ) {
-						?><td><?php
-						if ( $role->has_cap( 'edit_posts' ) || $role->has_cap( 'edit_pages' ) ) {
-							$attr = $role_slug == 'administrator'?'disabled':'';
-							if ( $role->has_cap( $cap ) ) {
-								?><button <?php echo $attr ?> name="revoke_cap[<?php echo $role_slug ?>]" value="<?php echo $cap ?>" type="submit" class="button-secondary" /><?php _e('Forbid' , 'wp-access-areas') ?></button><?php
-							} else {
-								?><button name="grant_cap[<?php echo $role_slug ?>]" value="<?php echo $cap ?>" type="submit" class="button-primary" /><?php _e('Allow'  , 'wp-access-areas') ?></button><?php
-							}
+					if ( $role->has_cap( 'edit_posts' ) || $role->has_cap( 'edit_pages' ) ) {
+						$alternate = !$alternate;
+						?><tr class="role-select <?php if ( $alternate ) echo "alternate" ?>"><?php
+						?><th><?php
+							echo translate_user_role( $role_details['name'] );
+						?></th><?php
+						foreach ( array_keys( self::$role_caps ) as $cap ) {
+							?><td><?php
+								$attr = $role_slug == 'administrator'?'disabled':'';
+								if ( $role->has_cap( $cap ) ) {
+									?><button <?php echo $attr ?> name="revoke_cap[<?php echo $role_slug ?>]" value="<?php echo $cap ?>" type="submit" class="button-secondary" /><?php _e('Forbid' , 'wp-access-areas') ?></button><?php
+								} else {
+									?><button name="grant_cap[<?php echo $role_slug ?>]" value="<?php echo $cap ?>" type="submit" class="button-primary" /><?php _e('Allow'  , 'wp-access-areas') ?></button><?php
+								}
 					
-						} else {
+							?></td><?php
 						}
-						?></td><?php
+						?><tr><?php
 					}
-					?><tr><?php
-					}
-				?></tbody><?php
+				}
+			?></tbody><?php
 			?></table><?php
 			?><p class="description"><?php 
 				_e('If you are running a role editor plugin such as <a href="https://wordpress.org/plugins/user-role-editor/">User Role editor by Vladimir Garagulya</a> or <a href="https://wordpress.org/plugins/wpfront-user-role-editor/">WPFront User Role Editor by Syam Mohan</a> you can do the same as here by assigning the custom capabilites <code>wpaa_set_view_cap</code>, <code>wpaa_set_edit_cap</code> and <code>wpaa_set_comment_cap</code>.','wp-access-areas');
@@ -293,7 +292,7 @@ class UndisclosedSettings {
 	static function select_behavior() {
 		$behavior = get_option('wpaa_default_behavior');
 		?><p><?php _e('If somebody tries to view a restricted post directly:' , 'wp-access-areas' ); ?></p><?php
-		UndisclosedEditPost::behavior_select( $behavior , 'wpaa_default_behavior' );
+		WPAA_Template::behavior_select( $behavior , 'wpaa_default_behavior' );
 	}
 	static function sanitize_behavior( $behavior ) {
 		if ( ! preg_match('/^(404|page|login)$/',$behavior) )
@@ -302,7 +301,7 @@ class UndisclosedSettings {
 	}
 	static function select_fallback_page(){
 		$post_fallback_page = get_option('wpaa_fallback_page');
-		UndisclosedEditPost::fallback_page_dropdown( $post_fallback_page , 'wpaa_fallback_page' );
+		WPAA_Template::fallback_page_dropdown( $post_fallback_page , 'wpaa_fallback_page' );
 	}
 	static function sanitize_fallbackpage($fallback_page_id) {
 		$page = get_post( $fallback_page_id );

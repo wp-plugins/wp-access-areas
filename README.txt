@@ -2,8 +2,8 @@
 Contributors: podpirate
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WF4Z3HU93XYJA
 Tags: access, role, capability, user, security, editor
-Requires at least: 3.5
-Tested up to: 4.0
+Requires at least: 3.8
+Tested up to: 4.1
 Stable tag: 1.3.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -22,15 +22,19 @@ even custom Access Areas.
 - define global access areas on a network
 - Supports bulk editing
 - German, Italian, Polish and Swedish localization (Huge Thankyou @ all translators!)
-- Clean uninstall
 
 Latest files on [GitHub](https://github.com/mcguffin/wp-access-areas).
 
 Developers might like to have a look at [the project wiki](https://github.com/mcguffin/wp-access-areas/wiki).
 
-= Known Limitations =
-- WordPress calendar Widget still shows dates where even restricted posts have been created. When clicked on such a date a 404 will occur. 
-- Taxonomy menus (e.g. Tags / Categories) also count restricted posts when the total number of posts in a taxonomy is ascertained. See [this post](http://wordpress.org/support/topic/archive-recents-posts-last-comments-show-restricted-content?replies=5#post-5929330) for details.
+= Known Issues =
+- WordPress calendar Widget still shows dates where even restricted posts have been created. 
+  When clicked on such a date a 404 will occur. There already is a 
+  [WordPress Core ticket on that issue](https://core.trac.wordpress.org/ticket/29319) but the 
+  proposed patch will not make it into WP 4.1. Lets put some hope into 4.2.
+- Taxonomy menus (e.g. Tags / Categories) also count restricted posts when the total number 
+  of posts in a taxonomy is ascertained. 
+  See [this post](http://wordpress.org/support/topic/archive-recents-posts-last-comments-show-restricted-content?replies=5#post-5929330) for details.
 
 == Installation ==
 
@@ -66,7 +70,7 @@ Developer documentation can be found in [the project wiki](https://github.com/mc
 
 = I found a bug. Where should I post it? =
 
-I personally prefer GitHub. The plugin code is here: [GitHub](https://github.com/mcguffin/wp-access-areas)
+I personally prefer GitHub but you can post it in the forum as well. The plugin code is here: [GitHub](https://github.com/mcguffin/wp-access-areas)
 
 = I want to use the latest files. How can I do this? =
 
@@ -106,16 +110,24 @@ I will migrate all the translation stuff there.
 
 == Changelog ==
 
+= 1.4.0 =
+ - Feature: Explicitly enable / disable custom behaviour on posts.
+ - UI: Combine columns in Posts list table
+ - Fix: Contained roles were not assumed correctly
+ - Fix: QuickEdit did not show Access after save
+ - Compatibility: Drop support for WP < 3.8
+ - Code refactoring, switched classname prefixes
+
 = 1.3.3 =
-- Fix: Database error on comment feeds. Hiding or redirecting from comment feeds should work now.
-- Fix: Crash during update (function `get_editable_roles` not found)
+ - Fix: Database error on comment feeds. Hiding or redirecting from comment feeds should work now.
+ - Fix: Crash during update (function `get_editable_roles` not found)
 
 = 1.3.2 =
-- Security Fix: Exclude restricted posts from comment feeds
+ - Security Fix: Exclude restricted posts from comment feeds
 
 = 1.3.1 =
-- Fix: Possible vulnerability where unauthorized users could change post access settings
-- L10n: change plugin textdomain from 'wpundisclosed' to 'wp-access-areas' (= Plugin slug). Rename lang/ > languages/.
+ - Fix: Possible vulnerability where unauthorized users could change post access settings
+ - L10n: change plugin textdomain from 'wpundisclosed' to 'wp-access-areas' (= Plugin slug). Rename lang/ > languages/.
 
 = 1.3.0 =
  - WordPress 4.0 compatibility

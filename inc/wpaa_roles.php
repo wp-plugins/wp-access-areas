@@ -37,9 +37,9 @@ function wpaa_user_can( $cap , $args = array() ) {
  */
 function wpaa_get_access_area( $identifier ) {
 	if ( is_numeric( $identifier ) ) {
-		return UndisclosedUserlabel::get_userlabel( $identifier );
+		return WPAA_AccessArea::get_userlabel( $identifier );
 	} else if ( wpaa_is_access_area( $identifier ) ) {
-		return UndisclosedUserlabel::get_userlabel_by_cap( $identifier );
+		return WPAA_AccessArea::get_userlabel_by_cap( $identifier );
 	}
 	
 }
@@ -76,7 +76,7 @@ function wpaa_is_access_area( $cap ) {
 function wpaa_access_area_exists( $cap ) {
 	if ( ! wpaa_is_access_area( $cap ) )
 		return false;
-	return UndisclosedUserlabel::capability_exists( $cap );
+	return WPAA_AccessArea::capability_exists( $cap );
 }
 
 /**
@@ -137,7 +137,6 @@ function wpaa_user_can_role( $role , $user_role_caps = null ) {
 	global $wp_roles;
 	if ( is_null( $user_role_caps ) )
 		$user_role_caps = wpaa_get_user_role_caps();
-		
 	if ( $wp_roles->is_role($role) )
 		return 0 == count(array_diff_assoc(  $wp_roles->get_role( $role )->capabilities , $user_role_caps ) );
 	return false;
@@ -212,9 +211,10 @@ function wpaa_role_contains( $container , $contained ) {
 	if ( $container == $contained ) {
 		$contains = true;
 	} else if ( $wp_roles->is_role( $container ) && $wp_roles->is_role( $contained ) ) {
-		$contains = 0 < count(array_diff_assoc(  
-			$wp_roles->get_role( $container )->capabilities , 
-			$wp_roles->get_role( $contained )->capabilities
+
+		$contains = 0 == count(array_diff_assoc(  
+			$wp_roles->get_role( $contained )->capabilities ,
+			$wp_roles->get_role( $container )->capabilities 
 		));
 		
 	}
