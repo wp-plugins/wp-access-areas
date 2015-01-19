@@ -12,13 +12,13 @@ if ( ! class_exists('WPAA_Posts') ):
 class WPAA_Posts {
 	
 	static function init() {
-
+		add_action( 'pre_get_posts' , array( __CLASS__ , 'wp_query_allow_filters' ) );
 		// viewing restrictions on posts lists
 		add_action( 'get_pages' , array( __CLASS__ , 'skip_undisclosed_items' ) , 10 , 1 ); // needed by nav menus
 		add_filter( 'posts_where' , array( __CLASS__ , 'get_posts_where' ) , 10 , 2 );
 		add_filter( 'getarchives_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 2 );
 		/*
-		// activate as soon as patch @ https://core.trac.wordpress.org/attachment/ticket/29319/general-template.diff makes it into core.
+		// see calendar wiget issue: https://core.trac.wordpress.org/ticket/29319
 		add_filter( 'getcalendar_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 1 );
 		add_filter( 'getcalendar_next_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 1 );
 		add_filter( 'getcalendar_previous_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 1 );
@@ -54,6 +54,10 @@ class WPAA_Posts {
 		if ( $user_caps )
 			$allcaps += array_combine( $user_caps , array_fill(0,count($user_caps),true));
 		return $allcaps;
+	}
+	
+	static function wp_query_allow_filters( $wp_query ) {	
+		$wp_query->set('suppress_filters',false);
 	}
 	
 	// --------------------------------------------------
