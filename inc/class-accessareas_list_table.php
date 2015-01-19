@@ -12,8 +12,8 @@ if ( ! class_exists('WP_List_Table') ) {
 // ----------------------------------------
 //	Defines the List view table for Access Areas in the backend.
 // ----------------------------------------
-if ( ! class_exists( 'UserLabel_List_Table' ) ) :
-class UserLabel_List_Table extends WP_List_Table {
+if ( ! class_exists( 'AccessAreas_List_Table' ) ) :
+class AccessAreas_List_Table extends WP_List_Table {
 	
 	function __construct( $args = array() ) {
 		extract(wp_parse_args(
@@ -39,12 +39,12 @@ class UserLabel_List_Table extends WP_List_Table {
     function get_columns() {
     	$columns = array(
 			'cb'			=> '<input type="checkbox" />', //Render a checkbox instead of text
-			'cap_title'		=> __('Name','wpundisclosed'),
+			'cap_title'		=> __('Name','wp-access-areas'),
     	);
     	if ( is_multisite() )
-    		$columns['blog'] =  __('Scope','wpundisclosed');
+    		$columns['blog'] =  __('Scope','wp-access-areas');
     	
-		$columns['capability'] = __('WP Capability','wpundisclosed');
+		$columns['capability'] = __('WP Capability','wp-access-areas');
     	return $columns;
     }
     function get_sortable_columns() {
@@ -58,29 +58,23 @@ class UserLabel_List_Table extends WP_List_Table {
     	$output = isset($item->$column_name) ? $item->$column_name : '';
         switch($column_name) {
         	case 'cap_title':
-				if ( ! $item->blog_id ) 
-					$ret = '<span title="Network" class="icon-undisclosed-network icon16"></span>';
-				else 
-					$ret = '<span title="Local" class="icon-undisclosed-local icon16"></span>';
-
+				$ret = WPAA_Template::access_area( $output , ! $item->blog_id );
         		if ( is_network_admin() ^ $item->blog_id ) {
 					$url = add_query_arg( array( 'action'=>'edit','id'=>$item->ID ) );
 					$url = remove_query_arg('message',$url);
 					$url = remove_query_arg('deleted',$url);
-					$ret .= sprintf( '<strong><a href="%s">%s</a></strong>' , $url , $output );
+					$ret = sprintf( '<a href="%s">%s</a>' , $url , $ret );
 					
 					$del_url = add_query_arg( array('action'=>'delete','id'=>$item->ID,'_wpnonce'=>wp_create_nonce('userlabel-delete')) );
 					$del_url = remove_query_arg('message',$del_url);
 					$del_url = remove_query_arg('deleted',$del_url);
 					$ret .= sprintf('<br /><div class="row-actions"><span class="remove"><a href="%s" class="submitdelete">%s</a></span></div>',$del_url,__('Delete'));
-					return $ret;
-				} else {
-					return $ret.$output;
 				}
+				return $ret;
         	case 'capability':
         		return "<code>$output</code>";
         	case 'blog':
-        		return $item->blog_id ? get_blog_details( $item->blog_id , true )->siteurl : __('Network','wpundisclosed');
+        		return $item->blog_id ? get_blog_details( $item->blog_id , true )->siteurl : __('Network','wp-access-areas');
         	case 'blog_id':
         		return $output;
         	case 'actions':
@@ -101,7 +95,7 @@ class UserLabel_List_Table extends WP_List_Table {
 		$current_page = $this->get_pagenum();
 		$per_page = 25;
 		$limit = (($current_page-1)*$per_page).",$per_page";
-		$total_items = UndisclosedUserlabel::get_count_available_userlabels( );
+		$total_items = WPAA_AccessArea::get_count_available_userlabels( );
 		
 		$columns = $this->get_columns();
 		$hidden = array();
@@ -120,7 +114,7 @@ class UserLabel_List_Table extends WP_List_Table {
 				$order .= ' ASC'; 
 		}
 		// use wpdb here!
-		$data = UndisclosedUserlabel::get_available_userlabels( $limit , $order );
+		$data = WPAA_AccessArea::get_available_userlabels( $limit , $order );
 
 		
 		
@@ -156,8 +150,8 @@ class UserLabel_List_Table extends WP_List_Table {
 			switch ($action) {
 				case 'delete':
 					foreach ($_REQUEST[$this->_args['plural']] as $ul_id) 
-						if ( $ul = UndisclosedUserlabel::get_userlabel( intval($ul_id) ) ) 
-							UndisclosedUserlabel::delete_userlabel( intval($ul_id) );
+						if ( $ul = WPAA_AccessArea::get_userlabel( intval($ul_id) ) ) 
+							WPAA_AccessArea::delete_userlabel( intval($ul_id) );
 					return wp_redirect( add_query_arg( array('page'=>'user_labels' , 'message'=>3 , 'deleted' => count($_REQUEST[$this->_args['plural']]) ) , $_SERVER['SCRIPT_NAME'] ) );
 				default:
 			}

@@ -8,24 +8,24 @@
 //	This class provides an interface for editing access areas
 // ----------------------------------------
 
-if ( ! class_exists('UndisclosedSettings' ) ) :
+if ( ! class_exists('WPAA_Settings' ) ) :
 
-class UndisclosedSettings {
+class WPAA_Settings {
 	private static $post_stati;
 	private static $role_caps;
 
 	static function init( ) {
 		self::$post_stati = array(
-			'' => __('Don‘t change','wpundisclosed'),
+			'' => __('Don‘t change','wp-access-areas'),
 			'publish' => __('Public'),
 			'private' => __('Private'),
 			'draft' => __('Draft'),
 			'pending' => __('Pending Review'),
 		);
 		self::$role_caps = array( 
-			'wpaa_set_view_cap'		=> __( 'Change View Access' , 'wpundisclosed'),
-			'wpaa_set_edit_cap'		=> __( 'Change Edit Access' , 'wpundisclosed'),
-			'wpaa_set_comment_cap'	=> __( 'Change Comment Access' , 'wpundisclosed'),
+			'wpaa_set_view_cap'		=> __( 'Change View Access' , 'wp-access-areas'),
+			'wpaa_set_edit_cap'		=> __( 'Change Edit Access' , 'wp-access-areas'),
+			'wpaa_set_comment_cap'	=> __( 'Change Comment Access' , 'wp-access-areas'),
 		);
 		add_option( 'wpaa_default_behavior' , '404' );
 		add_option( 'wpaa_fallback_page' , 0 );
@@ -42,7 +42,7 @@ class UndisclosedSettings {
 		add_action( 'load-settings_page_wpaa_settings' , array( __CLASS__ , 'load_style' ) );
 	}
 	static function load_style() {
-		wp_enqueue_style( 'disclosure-admin' );
+		wp_enqueue_style( 'wpaa-admin' );
 	}
 	static function enable_assign_cap( $old_value , $new_value ) {
 		if ( $new_value && ! $old_value  ) {
@@ -52,7 +52,7 @@ class UndisclosedSettings {
 				! $admin_role->has_cap('wpaa_set_edit_cap')  ||
 				! $admin_role->has_cap('wpaa_set_comment_cap') ) {
 
-				UndisclosedInstall::install_role_caps();
+				WPAA_Install::install_role_caps();
 			}
 		}
 	}
@@ -76,7 +76,7 @@ class UndisclosedSettings {
 		return array_filter( array_keys( self::$post_stati ) );
 	}
 	static function create_menu() { // @ admin_menu
-		add_options_page(__('Access Settings','wpundisclosed'), __('Access Settings','wpundisclosed'), 'promote_users', 'wpaa_settings', array(__CLASS__,'settings_page'));
+		add_options_page(__('Access Settings','wp-access-areas'), __('Access Settings','wp-access-areas'), 'promote_users', 'wpaa_settings', array(__CLASS__,'settings_page'));
 	}
 	static function register_settings() { // @ admin_init
 		
@@ -86,23 +86,23 @@ class UndisclosedSettings {
 		register_setting( 'wpaa_settings' , 'wpaa_default_caps' , array(__CLASS__,'sanitize_access_caps') );
 		register_setting( 'wpaa_settings' , 'wpaa_enable_assign_cap' , 'intval' );
 
-		add_settings_section('wpaa_main_section', __('Restricted Access Behavior','wpundisclosed'), array(__CLASS__,'main_section_intro'), 'wpaa');
+		add_settings_section('wpaa_main_section', __('Restricted Access Behavior','wp-access-areas'), array(__CLASS__,'main_section_intro'), 'wpaa');
 		
-		add_settings_field('wpaa_default_behavior', __('Default Behaviour','wpundisclosed'), array( __CLASS__ , 'select_behavior'), 'wpaa', 'wpaa_main_section');
-		add_settings_field('wpaa_fallback_page', __('Default Fallback Page','wpundisclosed'), array( __CLASS__ , 'select_fallback_page'), 'wpaa', 'wpaa_main_section');
+		add_settings_field('wpaa_default_behavior', __('Default Behaviour','wp-access-areas'), array( __CLASS__ , 'select_behavior'), 'wpaa', 'wpaa_main_section');
+		add_settings_field('wpaa_fallback_page', __('Default Fallback Page','wp-access-areas'), array( __CLASS__ , 'select_fallback_page'), 'wpaa', 'wpaa_main_section');
 
-		add_settings_section('wpaa_post_access_section', __('Access Defaults for new Posts','wpundisclosed'), array( __CLASS__ , 'post_access_section_intro' ), 'wpaa');
-		add_settings_field( 'wpaa_default_caps', __('Default Access:','wpundisclosed'), array( __CLASS__ , 'select_default_caps'), 'wpaa', 'wpaa_post_access_section');
+		add_settings_section('wpaa_post_access_section', __('Access Defaults for new Posts','wp-access-areas'), array( __CLASS__ , 'post_access_section_intro' ), 'wpaa');
+		add_settings_field( 'wpaa_default_caps', __('Default Access:','wp-access-areas'), array( __CLASS__ , 'select_default_caps'), 'wpaa', 'wpaa_post_access_section');
 
-		add_settings_section('wpaa_posts_section', __('Posts defaults','wpundisclosed'), '__return_false', 'wpaa');
-		add_settings_field('wpaa_default_post_status', __('Default Post Status','wpundisclosed'), array( __CLASS__ , 'select_post_status'), 'wpaa', 'wpaa_posts_section');
-		add_settings_field('wpaa_enable_assign_cap', __('Role Capabilities','wpundisclosed'), array( __CLASS__ , 'set_enable_capability'), 'wpaa', 'wpaa_posts_section');
+		add_settings_section('wpaa_posts_section', __('Posts defaults','wp-access-areas'), '__return_false', 'wpaa');
+		add_settings_field('wpaa_default_post_status', __('Default Post Status','wp-access-areas'), array( __CLASS__ , 'select_post_status'), 'wpaa', 'wpaa_posts_section');
+		add_settings_field('wpaa_enable_assign_cap', __('Role Capabilities','wp-access-areas'), array( __CLASS__ , 'set_enable_capability'), 'wpaa', 'wpaa_posts_section');
 	}
 	static function main_section_intro() {
-		?><p class="small description"><?php _e('You can also set these Options for each post individually.' , 'wpundisclosed' ); ?></p><?php
+		?><p class="small description"><?php _e('You can also set these Options for each post individually.' , 'wp-access-areas' ); ?></p><?php
 	}
 	static function post_access_section_intro() {
-		?><p class="small description"><?php _e('Default settings for newly created posts.' , 'wpundisclosed' ); ?></p><?php
+		?><p class="small description"><?php _e('Default settings for newly created posts.' , 'wp-access-areas' ); ?></p><?php
 	}
 	static function settings_page() {
 		/*
@@ -113,7 +113,7 @@ class UndisclosedSettings {
 		}*/
 		?>
 		<div class="wrap">
-			<h2><?php _e('Access Areas Settings','wpundisclosed') ?></h2>
+			<h2><?php _e('Access Areas Settings','wp-access-areas') ?></h2>
 			
 			<form id="wpaa-options" method="post" action="options.php">
 				<?php 
@@ -141,42 +141,27 @@ class UndisclosedSettings {
 			$rolenames[$role] = $rolename;
 		}
 		
-		$groups = UndisclosedUserlabel::get_label_array( );
+		$groups = WPAA_AccessArea::get_label_array( );
 		?><table class="wp-list-table widefat set-default-caps"><?php
-			?><thead><?php
+			foreach ( array( 'thead' , 'tfoot' ) as $tag ) {
+			?><<?php echo $tag; ?>><?php
 				?><tr><?php
 				
 					?><th class="manage-column"><?php
-						_e('Post Type' , 'wpundisclosed' );
+						_e('Post Type', 'wp-access-areas');
 					?></th><?php
-					?><th class="manage-column"><?php
+					?><th class="manage-column"><span class=" dashicons-before dashicons-visibility"> </span><?php
 						_e('Reading');
 					?></th><?php
-					?><th class="manage-column"><?php
+					?><th class="manage-column"><span class=" dashicons-before dashicons-edit"> </span><?php
 						_e('Edit');
 					?></th><?php
-					?><th class="manage-column"><?php
+					?><th class="manage-column"><span class=" dashicons-before dashicons-admin-comments"> </span><?php
 						_e('Post Comment');
 					?></th><?php
 				?></tr><?php
-			?></thead><?php
-			?><tfoot><?php
-				?><tr><?php
-				
-					?><th class="manage-column"><?php
-						_e('Post Type', 'wpundisclosed');
-					?></th><?php
-					?><th class="manage-column"><?php
-						_e('Reading');
-					?></th><?php
-					?><th class="manage-column"><?php
-						_e('Edit');
-					?></th><?php
-					?><th class="manage-column"><?php
-						_e('Post Comment');
-					?></th><?php
-				?></tr><?php
-			?></tfoot><?php
+			?></<?php echo $tag; ?>><?php
+			}
 			?><tbody><?php
 		$alternate = false;
 		foreach ( $post_types as $post_type ) {
@@ -199,14 +184,14 @@ class UndisclosedSettings {
 					$action = 'post_view_cap';
 					$cap = isset($option_values[$post_type][$action] )?$option_values[$post_type][$action] : 'exist';
 					if ( $post_type != 'attachment' && ( $post_type_object->public || $post_type_object->show_ui)  )
-						UndisclosedEditPost::access_area_dropdown(  $roles , $groups , 
+						WPAA_Template::access_area_dropdown(  $roles , $groups , 
 							wpaa_sanitize_access_cap( $cap ) , 
 							"wpaa_default_caps[$post_type][$action]"  );
 				?></td><?php
 				?><td><?php
 					$action = 'post_edit_cap';
 					$cap = isset($option_values[$post_type][$action] )?$option_values[$post_type][$action] : 'exist';
-					UndisclosedEditPost::access_area_dropdown(  $edit_rolenames , $groups , 
+					WPAA_Template::access_area_dropdown(  $edit_rolenames , $groups , 
 						wpaa_sanitize_access_cap( $cap ) , 
 						"wpaa_default_caps[$post_type][$action]"  );
 				?></td><?php
@@ -214,7 +199,7 @@ class UndisclosedSettings {
 					$action = 'post_comment_cap';
 					$cap = isset($option_values[$post_type][$action] )?$option_values[$post_type][$action] : 'exist';
 					if ( post_type_supports( $post_type , 'comments' ) )
-						UndisclosedEditPost::access_area_dropdown(  $roles , $groups , 
+						WPAA_Template::access_area_dropdown(  $roles , $groups , 
 							wpaa_sanitize_access_cap( $cap ) , 
 							"wpaa_default_caps[$post_type][$action]"  );
 				?></td><?php
@@ -231,14 +216,14 @@ class UndisclosedSettings {
 		if ( $enabled ) {
 			$roles = get_editable_roles();
 			?><p class="description"><?php 
-				_e('This table shows which Roles are allowed to set the ‘Who can view’, ‘Who can edit’ and ‘Who can comment’ properties.','wpundisclosed');
+				_e('This table shows which Roles are allowed to set the ‘Who can view’, ‘Who can edit’ and ‘Who can comment’ properties.','wp-access-areas');
 			?></p><?php
 			?><table class="wp-list-table widefat set-default-caps"><?php
 				?><thead><?php
 					?><tr><?php
 				
 						?><th class="manage-column"><?php
-							_e( 'Role' , 'wpundisclosed' );
+							_e( 'Role' , 'wp-access-areas' );
 						?></th><?php
 						foreach ( self::$role_caps as $cap => $label ) {
 							?><th class="manage-column"><?php
@@ -253,47 +238,46 @@ class UndisclosedSettings {
 				$alternate = false;
 				foreach ( $roles as $role_slug => $role_details ) {
 					$role = get_role( $role_slug );
-					$alternate = !$alternate;
-					?><tr class="role-select <?php if ( $alternate ) echo "alternate" ?>"><?php
-					?><th><?php
-						echo translate_user_role( $role_details['name'] );
-					?></th><?php
-					foreach ( array_keys( self::$role_caps ) as $cap ) {
-						?><td><?php
-						if ( $role->has_cap( 'edit_posts' ) || $role->has_cap( 'edit_pages' ) ) {
-							$attr = $role_slug == 'administrator'?'disabled':'';
-							if ( $role->has_cap( $cap ) ) {
-								?><button <?php echo $attr ?> name="revoke_cap[<?php echo $role_slug ?>]" value="<?php echo $cap ?>" type="submit" class="button-secondary" /><?php _e('Forbid' , 'wpundisclosed') ?></button><?php
-							} else {
-								?><button name="grant_cap[<?php echo $role_slug ?>]" value="<?php echo $cap ?>" type="submit" class="button-primary" /><?php _e('Allow'  , 'wpundisclosed') ?></button><?php
-							}
+					if ( $role->has_cap( 'edit_posts' ) || $role->has_cap( 'edit_pages' ) ) {
+						$alternate = !$alternate;
+						?><tr class="role-select <?php if ( $alternate ) echo "alternate" ?>"><?php
+						?><th><?php
+							echo translate_user_role( $role_details['name'] );
+						?></th><?php
+						foreach ( array_keys( self::$role_caps ) as $cap ) {
+							?><td><?php
+								$attr = $role_slug == 'administrator'?'disabled':'';
+								if ( $role->has_cap( $cap ) ) {
+									?><button <?php echo $attr ?> name="revoke_cap[<?php echo $role_slug ?>]" value="<?php echo $cap ?>" type="submit" class="button-secondary" /><?php _e('Forbid' , 'wp-access-areas') ?></button><?php
+								} else {
+									?><button name="grant_cap[<?php echo $role_slug ?>]" value="<?php echo $cap ?>" type="submit" class="button-primary" /><?php _e('Allow'  , 'wp-access-areas') ?></button><?php
+								}
 					
-						} else {
+							?></td><?php
 						}
-						?></td><?php
+						?><tr><?php
 					}
-					?><tr><?php
-					}
-				?></tbody><?php
+				}
+			?></tbody><?php
 			?></table><?php
 			?><p class="description"><?php 
-				_e('If you are running a role editor plugin such as <a href="https://wordpress.org/plugins/user-role-editor/">User Role editor by Vladimir Garagulya</a> or <a href="https://wordpress.org/plugins/wpfront-user-role-editor/">WPFront User Role Editor by Syam Mohan</a> you can do the same as here by assigning the custom capabilites <code>wpaa_set_view_cap</code>, <code>wpaa_set_edit_cap</code> and <code>wpaa_set_comment_cap</code>.','wpundisclosed');
+				_e('If you are running a role editor plugin such as <a href="https://wordpress.org/plugins/user-role-editor/">User Role editor by Vladimir Garagulya</a> or <a href="https://wordpress.org/plugins/wpfront-user-role-editor/">WPFront User Role Editor by Syam Mohan</a> you can do the same as here by assigning the custom capabilites <code>wpaa_set_view_cap</code>, <code>wpaa_set_edit_cap</code> and <code>wpaa_set_comment_cap</code>.','wp-access-areas');
 			?></p><?php
 			?><p class="description"><?php 
-				_e('By disabling the role capabilities feature you will allow everybody who can at least publish a post to edit the access properties as well.','wpundisclosed');
+				_e('By disabling the role capabilities feature you will allow everybody who can at least publish a post to edit the access properties as well.','wp-access-areas');
 			?></p><?php
-			?><button name="wpaa_enable_assign_cap" value="0" type="submit" class="button-secondary" /><?php _e('Disable Role Capabilities' , 'wpundisclosed'); ?></button><?php
+			?><button name="wpaa_enable_assign_cap" value="0" type="submit" class="button-secondary" /><?php _e('Disable Role Capabilities' , 'wp-access-areas'); ?></button><?php
 		} else {
 			?><p class="description"><?php 
-				_e('By default everybody who can publish an entry can also edit the access properties such as ‘Who can view’ or ‘Who can edit’.<br /> If this is too generous for you then click on the button below.','wpundisclosed');
+				_e('By default everybody who can publish an entry can also edit the access properties such as ‘Who can view’ or ‘Who can edit’.<br /> If this is too generous for you then click on the button below.','wp-access-areas');
 			?></p><?php
-			?><button name="wpaa_enable_assign_cap" value="1" type="submit" class="button-secondary" /><?php _e('Enable Role Capabilities' , 'wpundisclosed'); ?></button><?php
+			?><button name="wpaa_enable_assign_cap" value="1" type="submit" class="button-secondary" /><?php _e('Enable Role Capabilities' , 'wp-access-areas'); ?></button><?php
 		}
 	}
 	static function select_behavior() {
 		$behavior = get_option('wpaa_default_behavior');
-		?><p><?php _e('If somebody tries to view a restricted post directly:' , 'wpundisclosed' ); ?></p><?php
-		UndisclosedEditPost::behavior_select( $behavior , 'wpaa_default_behavior' );
+		?><p><?php _e('If somebody tries to view a restricted post directly:' , 'wp-access-areas' ); ?></p><?php
+		WPAA_Template::behavior_select( $behavior , 'wpaa_default_behavior' );
 	}
 	static function sanitize_behavior( $behavior ) {
 		if ( ! preg_match('/^(404|page|login)$/',$behavior) )
@@ -302,7 +286,7 @@ class UndisclosedSettings {
 	}
 	static function select_fallback_page(){
 		$post_fallback_page = get_option('wpaa_fallback_page');
-		UndisclosedEditPost::fallback_page_dropdown( $post_fallback_page , 'wpaa_fallback_page' );
+		WPAA_Template::fallback_page_dropdown( $post_fallback_page , 'wpaa_fallback_page' );
 	}
 	static function sanitize_fallbackpage($fallback_page_id) {
 		$page = get_post( $fallback_page_id );
@@ -332,7 +316,7 @@ class UndisclosedSettings {
 		}
 		?></select><?php
 		?><p class="description"><?php
-			_e('Set post status of assigned posts after an Access Area has been deleted.','wpundisclosed');
+			_e('Set post status of assigned posts after an Access Area has been deleted.','wp-access-areas');
 		?></p><?php
 	}
 	static function sanitize_poststatus( $post_status ) {

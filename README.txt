@@ -2,9 +2,9 @@
 Contributors: podpirate
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=WF4Z3HU93XYJA
 Tags: access, role, capability, user, security, editor
-Requires at least: 3.5
-Tested up to: 4.0
-Stable tag: 1.3.0
+Requires at least: 3.8
+Tested up to: 4.1
+Stable tag: 1.4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,13 +22,19 @@ even custom Access Areas.
 - define global access areas on a network
 - Supports bulk editing
 - German, Italian, Polish and Swedish localization (Huge Thankyou @ all translators!)
-- Clean uninstall
 
 Latest files on [GitHub](https://github.com/mcguffin/wp-access-areas).
 
-= Known Limitations =
-- WordPress calendar Widget still shows dates where even restricted posts have been created. When clicked on such a date a 404 will occur. 
-- Taxonomy menus (e.g. Tags / Categories) also count restricted posts when the total number of posts in a taxonomy is ascertained. See [this post](http://wordpress.org/support/topic/archive-recents-posts-last-comments-show-restricted-content?replies=5#post-5929330) for details.
+Developers might like to have a look at [the project wiki](https://github.com/mcguffin/wp-access-areas/wiki).
+
+= Known Issues =
+- WordPress calendar Widget still shows dates where even restricted posts have been created. 
+  When clicked on such a date a 404 will occur. There already is a 
+  [WordPress Core ticket on that issue](https://core.trac.wordpress.org/ticket/29319) but the 
+  proposed patch will not make it into WP 4.1. Lets put some hope into 4.2.
+- Taxonomy menus (e.g. Tags / Categories) also count restricted posts when the total number 
+  of posts in a taxonomy is ascertained. 
+  See [this post](http://wordpress.org/support/topic/archive-recents-posts-last-comments-show-restricted-content?replies=5#post-5929330) for details.
 
 == Installation ==
 
@@ -40,11 +46,14 @@ Latest files on [GitHub](https://github.com/mcguffin/wp-access-areas).
 
 = What does it exactly do? =
 
-For each Post it stores a capabilty the user needs to have in order to view, edit or comment on a post. By defining Access Areas You create nothing more than custom capabilities. 
+For each Post it stores a capabilty the user needs to have in order to view, edit or comment on a post. 
+By defining an Access Area you create nothing more than a custom capability. 
 
 = Why didn't you use post_meta to store permissions? WordPress already provides an API for this! =
 
-I did this mainly for performance reason. For detecting the reading-permission on specific content, the plugin mainly affects the WHERE clause used to retrieve posts. In most cases, using post_meta would mean to add a JOIN clause to the database query, which would slow down your site's performance.
+I did this mainly for performance reason. For detecting the reading-permission on specific content, 
+the plugin mainly affects the WHERE clause used to retrieve posts. In most cases, using post_meta 
+would mean to add lots of JOIN clauses to the database query, slowing down your site's performance.
 
 = Does it mess up my database? =
 
@@ -52,16 +61,16 @@ It makes changes to your database, but it won't make a mess out of it. Upon inst
 1. It creates a table named ´{$wp_prefix}_disclosure_userlabels´. The access areas you define are here.
 2. It adds three columns to Your Posts tables: post_view_cap and post_comment_cap. 
 
-Upon uninstall these changes will be removed completely, as well as it will remove any custom generated capability from Your user's profiles.
+Upon uninstall these changes will be removed completely, as well as it will remove any custom generated 
+capability from your user's profiles.
 
-= I'd like to do some magic / science when a user tries to view a restricted post. And yes: I can code! =
+= I'd like to do some more magic / science with it. And yes: I can code! =
 
-Check out the `wpaa_view_restricted_post` action hook and the `wpaa_restricted_post_redirect` filter. 
-Theres some documentation in the [GitHub Repo](https://github.com/mcguffin/wp-access-areas)
+Developer documentation can be found in [the project wiki](https://github.com/mcguffin/wp-access-areas/wiki).
 
 = I found a bug. Where should I post it? =
 
-I personally prefer GitHub. The plugin code is here: [GitHub](https://github.com/mcguffin/wp-access-areas)
+I personally prefer GitHub but you can post it in the forum as well. The plugin code is here: [GitHub](https://github.com/mcguffin/wp-access-areas)
 
 = I want to use the latest files. How can I do this? =
 
@@ -75,10 +84,22 @@ Use the GitHub Repo rather than the WordPress Plugin. Do as follows:
 
 4. If you want to update to the latest files (be careful, might be untested on Your WP-Version) type git pull´.
 
+Please note that the GitHub repository is more likely to contain unstable and untested code. Urgent fixes 
+concerning stability or security (like crashes, vulnerabilities and alike) are more likely to be fixed in 
+the official WP plugin repository first.
+
 = I found a bug and fixed it. How can I contribute? =
 
 Either post it on [GitHub](https://github.com/mcguffin/wp-access-areas) or—if you are working on a cloned repository—send me a pull request.
 
+= Will you accept translations? =
+
+Yep sure! (And a warm thankyou in advance.) It might take some time until your localization 
+will appear in an official plugin release, and it is not unlikely that I will have added 
+or removed some strings in the meantime. 
+
+As soon as there is a [public centralized repository for WordPress plugin translations](https://translate.wordpress.org/projects/wp-plugins) 
+I will migrate all the translation stuff there.
 
 == Screenshots ==
 
@@ -88,6 +109,29 @@ Either post it on [GitHub](https://github.com/mcguffin/wp-access-areas) or—if 
 4. Post Access Behaviour
 
 == Changelog ==
+
+= 1.4.1 =
+ - Fix: set suppress_filters to false on get_posts
+ - Fix: Saving Access Area Name
+
+= 1.4.0 =
+ - Feature: Explicitly enable / disable custom behaviour on posts.
+ - UI: Combine columns in Posts list table
+ - Fix: Contained roles were not assumed correctly
+ - Fix: QuickEdit did not show Access after save
+ - Compatibility: Drop support for WP < 3.8
+ - Code refactoring, switched classname prefixes
+
+= 1.3.3 =
+ - Fix: Database error on comment feeds. Hiding or redirecting from comment feeds should work now.
+ - Fix: Crash during update (function `get_editable_roles` not found)
+
+= 1.3.2 =
+ - Security Fix: Exclude restricted posts from comment feeds
+
+= 1.3.1 =
+ - Fix: Possible vulnerability where unauthorized users could change post access settings
+ - L10n: change plugin textdomain from 'wpundisclosed' to 'wp-access-areas' (= Plugin slug). Rename lang/ > languages/.
 
 = 1.3.0 =
  - WordPress 4.0 compatibility

@@ -8,8 +8,8 @@
 //	This class provides an UI to assign Userlabels to Users.
 // ----------------------------------------
 
-if ( ! class_exists( 'UndisclosedUsers' ) ) :
-class UndisclosedUsers {
+if ( ! class_exists( 'WPAA_Users' ) ) :
+class WPAA_Users {
 
 	static function init( ) {
 		if ( is_admin() ) {
@@ -57,10 +57,10 @@ class UndisclosedUsers {
 	}
 	
 	static function load_edit_script() {
-		wp_enqueue_script( 'disclosure-admin-user-ajax');
+		wp_enqueue_script( 'wpaa-admin-user-ajax');
 	} 
 	static function load_style() {
-		wp_enqueue_style( 'disclosure-admin' );
+		wp_enqueue_style( 'wpaa-admin' );
 	}
 	
 	
@@ -73,29 +73,37 @@ class UndisclosedUsers {
 	// ajax adding access areas
 	// --------------------------------------------------
 	static function ajax_add_access_area() {
+		$success = false;
 		if ( wp_verify_nonce(@$_POST['_wp_ajax_nonce'] , 'userlabel-new' ) && current_user_can( 'promote_users' ) ) {
 			$cap_title = trim($_POST['cap_title']);
 			if ( ( !$_POST['blog_id'] && !is_super_admin() ) || ( $_POST['blog_id'] && $_POST['blog_id'] != get_current_blog_id() ) ) {
-				?><span class="disclosure-label-item error"><?php _e('Insufficient privileges.','wpundisclosed'); ?></span><?php  // throw_error: insufficient privileges
+				$message = __('Insufficient privileges.','wp-access-areas');
 			} else if (empty($cap_title)) {
-				?><span class="disclosure-label-item error"><?php _e('Empty name.','wpundisclosed'); ?></span><?php  // throw_error: empty name
+				$message = __('Empty name.','wp-access-areas');
 			} else {
-				$create_id = UndisclosedUserlabel::create_userlabel( array('cap_title' => $_POST['cap_title'], 'blog_id' => $_POST['blog_id'] ) );
+				$create_id = WPAA_AccessArea::create_userlabel( array('cap_title' => $_POST['cap_title'], 'blog_id' => $_POST['blog_id'] ) );
 			
 				if ( $create_id ) {
-					$label = UndisclosedUserlabel::get_userlabel( $create_id );
+					$label = WPAA_AccessArea::get_userlabel( $create_id );
+					$success = true;
 					self::_select_label_formitem( $label , true );
 				} else {
-					switch (UndisclosedUserlabel::what_went_wrong()) {
+					switch (WPAA_AccessArea::what_went_wrong()) {
 						case 4: // Error: area exists
-							?><span class="disclosure-label-item error"><?php _e('Access Area exists.','wpundisclosed'); ?></span><?php  // throw_error: insufficient privileges
+							$message = __('Access Area exists.','wp-access-areas');
 							break;
 					};
 				}
 			}
 		} else {
-			?><span class="disclosure-label-item error"><?php _e('Insufficient privileges.','wpundisclosed'); ?></span><?php  // throw_error: insufficient privileges
+			$message = __('Insufficient privileges.','wp-access-areas');
+			  // throw_error: insufficient privileges
 		}
+		
+		if ( ! $success ) {
+			printf( '<span class="wpaa-label-item error dashicons-before dashicons-no">%s</span>' , $message );
+		}
+		
 		die();
 	}
 	// --------------------------------------------------
@@ -106,16 +114,16 @@ class UndisclosedUsers {
 			?></div><?php
 			wp_nonce_field( 'bulk-access-areas', '_wpaanonce' , true );
 			?><div class="alignleft actions"><?php
-			echo self::_label_select_all( 'grant_access_area' , __('Grant Access … ','wpundisclosed') );
-			submit_button( __( 'Grant','wpundisclosed' ), 'button', 'grantit', false );
+			echo self::_label_select_all( 'grant_access_area' , __('Grant Access … ','wp-access-areas') );
+			submit_button( __( 'Grant','wp-access-areas' ), 'button', 'grantit', false );
 		}
 	}
 	static function bulk_revoke_access_dropdown() {
 		if ( current_user_can( 'promote_users' ) ) {
 			?></div><?php
 			?><div class="alignleft actions"><?php
-			echo self::_label_select_all( 'revoke_access_area' , __('Revoke Access … ','wpundisclosed') );
-			submit_button( __( 'Revoke','wpundisclosed' ), 'button', 'revokeit', false );
+			echo self::_label_select_all( 'revoke_access_area' , __('Revoke Access … ','wp-access-areas') );
+			submit_button( __( 'Revoke','wp-access-areas' ), 'button', 'revokeit', false );
 		}
 	}
 	static function bulk_edit_access() {
@@ -174,7 +182,7 @@ class UndisclosedUsers {
 		$user = new WP_User( $user_id );
 		$global_label_data = array();
 		foreach ($label_data as $label_id => $add) {
-			$label = UndisclosedUserLabel::get_userlabel( $label_id );
+			$label = WPAA_AccessArea::get_userlabel( $label_id );
 			if ( is_multisite() && ! $label->blog_id ) { // global
 				if ( $add )
 					$global_label_data[] = $label->capability;
@@ -222,7 +230,7 @@ class UndisclosedUsers {
 		$is_change = ($add && ! $has_cap) || (!$add && $has_cap);
 		if ( $is_change ) {
 			if ( ! $can_grant )
-				wp_die( __('You do not have permission to do this.' , 'wpundisclosed' ) );
+				wp_die( __('You do not have permission to do this.' , 'wp-access-areas' ) );
 			if ( $add ) {
 				$user->add_cap( $capability , true );
 				do_action( 'wpaa_grant_access' , $user , $capability );
@@ -238,40 +246,33 @@ class UndisclosedUsers {
 		// IS_PROFILE_PAGE : self or other
 		if ( ! current_user_can( 'promote_users' ) || (is_network_admin() && ! is_accessareas_active_for_network() ) ) 
 			return;
-		$labels = UndisclosedUserLabel::get_available_userlabels();
+		$labels = WPAA_AccessArea::get_available_userlabels();
 		
-		?><h3><?php _e( 'Access Areas' , 'wpundisclosed' ) ?></h3><?php
-		?><table class="form-table" id="disclosure-group-items"><?php
+		?><h3><?php _e( 'Access Areas' , 'wp-access-areas' ) ?></h3><?php
+		?><table class="form-table" id="wpaa-group-items"><?php
 		
 		$labelrows = array();
 		// wtf happens on single install?
 		if ( ! is_network_admin() ) {
-			$labelrows[ __( 'Grant Access' , 'wpundisclosed' ) ] = array( 
+			$labelrows[ __( 'Grant Access' , 'wp-access-areas' ) ] = array( 
 				'network' => false ,
-				'labels' => UndisclosedUserLabel::get_blog_userlabels() ,
+				'labels' => WPAA_AccessArea::get_blog_userlabels() ,
 				'can_ajax_add' => current_user_can( 'promote_users' ),
 			);
 		}
 		if ( ( is_network_admin() || is_super_admin() ) && is_accessareas_active_for_network() ) {
-			$labelrows[ __( 'Grant Network-Wide Access' , 'wpundisclosed' )] = array( 
+			$labelrows[ __( 'Grant Network-Wide Access' , 'wp-access-areas' )] = array( 
 				'network' => true ,	
-				'labels' => UndisclosedUserLabel::get_network_userlabels()  , 
+				'labels' => WPAA_AccessArea::get_network_userlabels()  , 
 				'can_ajax_add' => is_network_admin() || is_super_admin(),
 			);
 		}
 		foreach ( $labelrows as $row_title => $value ) {
 			extract( $value );
 			
-			?><tr class="<?php echo $network ? 'undisclosed-network' : 'undisclosed-local' ?>">
+			?><tr class="wpaa-section">
 				<th><?php
-
-				echo $row_title;
-
-				if ($network) {
-					?><span class="icon-undisclosed-network icon16"></span><?php
-				} else {
-					?><span class="icon-undisclosed-local icon16"></span><?php
-				}
+				printf( '<span class="dashicons-before dashicons-admin-%s">%s</span>' , $network ? 'site' : 'home', $row_title );
 
 				?></th>
 				<td><?php
@@ -291,13 +292,15 @@ class UndisclosedUsers {
 	}
 	private static function _select_label_formitem( $label , $checked , $enabled = true ) {
 		$attr_disabled = $enabled ? '' : ' disabled="disabled" ';
-		$item_class = array('disclosure-label-item');
+		$item_class = array('wpaa-label-item');
 		if (!$enabled)
 			$item_class[] = 'disabled';
 		?><span class="<?php echo  implode(' ',$item_class)?>"><?php
 			?><input type="hidden" name="userlabels[<?php echo $label->ID ?>]" value="0" /><?php
 			?><input <?php echo $attr_disabled ?> id="cap-<?php echo $label->capability ?>" type="checkbox" name="userlabels[<?php echo $label->ID ?>]" value="1" <?php checked( $checked , true ) ?> /><?php
-			?><label for="cap-<?php echo $label->capability ?>">  <?php echo $label->cap_title ?></label><?php
+			?><label for="cap-<?php echo $label->capability ?>"><?php 
+				echo $label->cap_title 
+			?></label><?php
 			if ( ! $enabled ) {
 				?><input type="hidden" name="userlabels[<?php echo $label->ID ?>]" value="<?php echo (int) $checked  ?>" /><?php
 			}
@@ -305,10 +308,10 @@ class UndisclosedUsers {
 	}
 	
 	private static function _ajax_add_area_formitem( $blog_id ) {
-		?><span class="disclosure-label-item ajax-add-item"><?php
+		?><span class="wpaa-label-item ajax-add-item"><?php
 			wp_nonce_field( 'userlabel-new' , '_wp_ajax_nonce' );
 			?><input type="hidden" name="blog_id" value="<?php echo $blog_id; ?>" /><?php
-			?><input class="cap-add" type="text" name="cap_title" placeholder="<?php _ex('Add New','access area','wpundisclosed') ?>" /><?php
+			?><input class="cap-add" type="text" name="cap_title" placeholder="<?php _ex('Add New','access area','wp-access-areas') ?>" /><?php
 			
 			?><a href="#" class="cap-add-submit button" disabled><?php _e('+') ?></a><?php
 		?></span><?php
@@ -323,23 +326,23 @@ class UndisclosedUsers {
 	
 	static function table_views( $views ) {
 		$ret = '';
-		$ret .= self::_listtable_label_select( UndisclosedUserLabel::get_blog_userlabels() , 'local' );
+		$ret .= self::_listtable_label_select( WPAA_AccessArea::get_blog_userlabels() );
 		if ( is_accessareas_active_for_network() )
-			$ret .= self::_listtable_label_select( UndisclosedUserLabel::get_network_userlabels() , 'network');
+			$ret .= self::_listtable_label_select( WPAA_AccessArea::get_network_userlabels() , true );
 		if ( $ret )
-			$views['labels'] = '<strong>'.__('Access Areas:','wpundisclosed').' </strong>' . $ret;
+			$views['labels'] = '<strong>'.__('Access Areas:','wp-access-areas').' </strong>' . $ret;
 		return $views;
 	}
-	private static function _listtable_label_select( $labels , $slug ) {
+	private static function _listtable_label_select( $labels , $global = false ) {
 		if (! count( $labels ) )
 			return '';
+		$slug = $global ? 'netowrk' : 'local';
 		$ret = '';
 		$current_label = isset($_GET['role']) ? $_GET['role'] : '';
-		$ret .= '<form class="select-user-label-form" method="get">';
-		$ret .= '<label for="select-user-label-'.$slug.'">';
-		$ret .= '<span class="icon-undisclosed-'.$slug.' icon16"></span>';
-		$ret .= '<select id="select-user-label-'.$slug.'" onchange="this.form.submit()" name="role">';
-		$ret .= sprintf('<option value="%s">%s</option>' , '' , __('(None)'));
+		$ret .= sprintf('<form class="wpaa-access-area dashicons-before dashicons-admin-%s select-accessarea-form" method="get">', $global ? 'site' : 'home' );
+		$ret .= sprintf('<label for="select-accessarea-%s">' , $slug );
+		$ret .= sprintf('<select id="select-accessarea-%s" onchange="this.form.submit()" name="role">' , $slug );
+		$ret .= sprintf('<option value="%s">%s</option>' , '' , __('-- Select --'));
 		$ret .= self::_label_select_options( $labels , $current_label );
 		$ret .= '</select>';
 		$ret .= '</label>';
@@ -356,13 +359,13 @@ class UndisclosedUsers {
 			$ret .=  sprintf('<option value="">%s</option>' , $first_element_label );
 		
 		if ( $network )
-			$ret .= sprintf('<optgroup label="%s">',__('Local','wpundisclosed'));
-		$ret .= self::_label_select_options(UndisclosedUserLabel::get_blog_userlabels());
+			$ret .= sprintf('<optgroup label="%s">',__('Local','wp-access-areas'));
+		$ret .= self::_label_select_options(WPAA_AccessArea::get_blog_userlabels());
 		if ( $network ) {
 			$ret .= '</optgroup>';
 		
-			$ret .= sprintf('<optgroup label="%s">',__('Network','wpundisclosed'));
-			$ret .= self::_label_select_options(UndisclosedUserLabel::get_network_userlabels());
+			$ret .= sprintf('<optgroup label="%s">',__('Network','wp-access-areas'));
+			$ret .= self::_label_select_options(WPAA_AccessArea::get_network_userlabels());
 			$ret .= '</optgroup>';
 		}
 		$ret .= '</select>';
@@ -377,31 +380,34 @@ class UndisclosedUsers {
 		}
 		return $ret;
 	}
+	
+	// --------------------------------------------------
+	// user admin list columns
+	// --------------------------------------------------
 	static function add_userlabels_column($columns) {
 
-		$columns['labels'] = __('Access Areas','wpundisclosed');
+		$columns['access'] = __('Access Areas','wp-access-areas');
 		return $columns;
 	}
 	static function manage_userlabels_column($column_content, $column, $user_ID) {
-		if ( $column != 'labels')
+		if ( $column != 'access')
 			return $column_content;
-				
+		
 		$ugroups = array();
 		
-		$labels = UndisclosedUserLabel::get_available_userlabels( );
+		$labels = WPAA_AccessArea::get_available_userlabels( );
 		$user = new WP_User( $user_ID );
 		if ( ( is_multisite() && is_super_admin( $user_ID ) ) || ( ! is_multisite() && $user->has_cap( 'administrator' )) )
-			return '<div class="disclosure-labels"><span class="disclosure-label-item access-all-areas"><span class="icon-undisclosed-network icon16"></span>' . __('Everywhere') . '</span></div>';
+			return WPAA_Template::access_area( __('Everywhere') , true );
 		
 		
 		foreach ($labels as $label) {
 			if ( $user->has_cap( $label->capability ) ) {
-				$icon =  $label->blog_id ? '<span class="icon-undisclosed-local icon16"></span>' : '<span class="icon-undisclosed-network icon16"></span>';
-				$ugroups[] = '<span class="disclosure-label-item">' . $icon . $label->cap_title . '</span>';
+				$ugroups[] = WPAA_Template::access_area( $label->cap_title , !$label->blog_id );
 			}
 		}
 		if ( count( $ugroups ) )
-			return '<div class="disclosure-labels">' . implode("", $ugroups) . '</div>';
+			return '<div class="wpaa-labels">' . implode("", $ugroups) . '</div>';
 
 		return '';
 	}
