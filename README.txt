@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: access, role, capability, user, security, editor
 Requires at least: 3.8
 Tested up to: 4.1
-Stable tag: 1.4.1
+Stable tag: 1.4.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -109,6 +109,10 @@ I will migrate all the translation stuff there.
 4. Post Access Behaviour
 
 == Changelog ==
+
+= 1.4.2 =
+ - Fix: no restrictions for empty post objects (fixes buddypress profile page issue)
+ - Fix: wrong redirection behavior for logged in users
 
 = 1.4.1 =
  - Fix: set suppress_filters to false on get_posts
