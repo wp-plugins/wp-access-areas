@@ -8,27 +8,27 @@
 //	Frontend Post Filters
 // ----------------------------------------
 
-if ( ! class_exists('UndisclosedPosts') ):
-class UndisclosedPosts {
+if ( ! class_exists('WPAA_Posts') ):
+class WPAA_Posts {
 	
 	static function init() {
-
+		add_action( 'pre_get_posts' , array( __CLASS__ , 'wp_query_allow_filters' ) );
 		// viewing restrictions on posts lists
 		add_action( 'get_pages' , array( __CLASS__ , 'skip_undisclosed_items' ) , 10 , 1 ); // needed by nav menus
-		add_filter( "posts_where" , array( __CLASS__ , "get_posts_where" ) , 10 , 2 );
-		add_filter( "getarchives_where" , array( __CLASS__ , "get_archiveposts_where" ) , 10 , 2 );
+		add_filter( 'posts_where' , array( __CLASS__ , 'get_posts_where' ) , 10 , 2 );
+		add_filter( 'getarchives_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 2 );
 		/*
-		// activate as soon as patch @ https://core.trac.wordpress.org/attachment/ticket/29319/general-template.diff makes it into core.
-		add_filter( "getcalendar_where" , array( __CLASS__ , "get_archiveposts_where" ) , 10 , 1 );
-		add_filter( "getcalendar_next_where" , array( __CLASS__ , "get_archiveposts_where" ) , 10 , 1 );
-		add_filter( "getcalendar_previous_where" , array( __CLASS__ , "get_archiveposts_where" ) , 10 , 1 );
+		// see calendar wiget issue: https://core.trac.wordpress.org/ticket/29319
+		add_filter( 'getcalendar_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 1 );
+		add_filter( 'getcalendar_next_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 1 );
+		add_filter( 'getcalendar_previous_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 1 );
 		//*/
-		add_filter( "posts_join" , array( __CLASS__ , "get_posts_join" ) , 10 , 2 );
+		add_filter( 'posts_join' , array( __CLASS__ , 'get_posts_join' ) , 10 , 2 );
 
-		add_filter( "get_next_post_where" , array( __CLASS__ , "get_adjacent_post_where" ) , 10 , 3 );
-		add_filter( "get_previous_post_where" , array( __CLASS__ , "get_adjacent_post_where" ) , 10 , 3 );
-		add_filter( "get_next_post_join" , array( __CLASS__ , "get_adjacent_post_join" ) , 10 , 3 );
-		add_filter( "get_previous_post_join" , array( __CLASS__ , "get_adjacent_post_join" ) , 10 , 3 );
+		add_filter( 'get_next_post_where' , array( __CLASS__ , 'get_adjacent_post_where' ) , 10 , 3 );
+		add_filter( 'get_previous_post_where' , array( __CLASS__ , 'get_adjacent_post_where' ) , 10 , 3 );
+		add_filter( 'get_next_post_join' , array( __CLASS__ , 'get_adjacent_post_join' ) , 10 , 3 );
+		add_filter( 'get_previous_post_join' , array( __CLASS__ , 'get_adjacent_post_join' ) , 10 , 3 );
 		
 		// behavior
 		add_action('template_redirect',array(__CLASS__,'template_redirect')); // or wp
@@ -38,6 +38,8 @@ class UndisclosedPosts {
 		add_filter( 'comments_clauses' , array( __CLASS__ , 'comments_query_clauses' ) , 10 , 2 );
 		add_filter( 'wp_count_comments' , array( __CLASS__ , 'count_comments' ) , 10 , 2 );
 		
+		add_filter( 'comment_feed_join' , array( __CLASS__ , 'get_comment_feed_join' ) );
+		add_filter( 'comment_feed_where' , array( __CLASS__ , 'get_archiveposts_where' ) , 10 , 2 );
 		//misc
 		add_filter( 'edit_post_link' , array(__CLASS__,'edit_post_link') , 10 , 2 );
 		add_filter( 'post_class' , array( __CLASS__ , 'post_class' ) , 10 , 3 );
@@ -54,12 +56,16 @@ class UndisclosedPosts {
 		return $allcaps;
 	}
 	
+	static function wp_query_allow_filters( $wp_query ) {	
+		$wp_query->set('suppress_filters',false);
+	}
+	
 	// --------------------------------------------------
 	// template redirect
 	// --------------------------------------------------
 	static function template_redirect() {
 		if ( is_singular() && $restricted_post = get_post() ) {
-			if ( ! wpaa_user_can( $restricted_post->post_view_cap ) ) {
+			if ( $restricted_post->ID !== 0 && ! wpaa_user_can( $restricted_post->post_view_cap ) ) {
 				do_action( 'wpaa_view_restricted_post' , $restricted_post->ID , $restricted_post );
 				$redirect			= false;
 				$behavior 			= get_post_meta($restricted_post->ID,'_wpaa_post_behavior',true);
@@ -67,27 +73,30 @@ class UndisclosedPosts {
 				// no behavior? take default value
 				if ( ! $behavior )
 					$behavior = get_option( 'wpaa_default_behavior' );
-
-				if ( $behavior == 'page' || is_user_logged_in() ) {
-					
-					// no fallback? take default value
-					if ( ! $fallback_page_id )
-						$fallback_page_id = get_option( 'wpaa_fallback_page' );
-										
-					if ( $fallback_page_id && wpaa_is_post_public( $fallback_page_id ) ) {
-						// if accessable take user to the fallback page
-						$redirect = get_permalink( $fallback_page_id );
-					} else {
-						// last resort: send him home
-						$redirect = home_url();
-					}
-				} else if ( $behavior == 'login' ) {
+				
+				if ( $behavior == 'login' && ! is_user_logged_in() ) {
 					// get user to login and return him to the requested page.
-					$redirect = wp_login_url( get_permalink() );
-				} else if ( $behavior == '404' ) { // 404
-					global $wp_query;
-					$wp_query->set_404();
-					status_header(404);
+					$redirect = wp_login_url( get_permalink( $restricted_post->ID ) );
+				} else {
+					if ( $behavior == 'page' ) {
+					
+						// no fallback? take default value
+						if ( ! $fallback_page_id )
+							$fallback_page_id = get_option( 'wpaa_fallback_page' );
+										
+						if ( $fallback_page_id && wpaa_is_post_public( $fallback_page_id ) ) {
+							// if accessable take user to the fallback page
+							$redirect = get_permalink( $fallback_page_id );
+						} else {
+							// last resort: send him home
+							$redirect = home_url();
+						}
+					} else { // assume 404
+						global $wp_query;
+						$wp_query->set_404();
+						status_header(404);
+						return;
+					}
 				}
 				$redirect = apply_filters( 'wpaa_restricted_post_redirect' , $redirect , $restricted_post->ID , $restricted_post );
 				if ( $redirect ) {
@@ -103,12 +112,16 @@ class UndisclosedPosts {
 	// --------------------------------------------------
 	static function comments_query_clauses( $clauses , $wp_comment_query ) {
 		global $wpdb;
-		if ( strpos( $clauses['join'] , $wpdb->posts ) === false )
-			$clauses['join'] = "JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->comments}.comment_post_ID";
+		$clauses['join'] = self::get_comment_feed_join($clauses['join']);
 		$clauses['where'] = self::_get_where( $clauses['where'] , $wpdb->posts );
 		return $clauses;
 	}
-	
+	static function get_comment_feed_join( $join ) {
+		global $wpdb;
+		if ( strpos( $join , $wpdb->posts ) === false )
+			$join .= " JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->comments}.comment_post_ID";
+		return $join;
+	}
 	
 	// --------------------------------------------------
 	// comment restrictions
@@ -269,7 +282,7 @@ class UndisclosedPosts {
 		return $where;
 	}
 	static function get_posts_join( $join , &$wp_query ) {
-		global $wpdb;
+// 		global $wpdb;
 		return $join;
 	}
 	
@@ -307,7 +320,7 @@ class UndisclosedPosts {
 				$caps[] = $role;
 			
 			// user's custom caps
-			foreach( UndisclosedUserlabel::get_label_array( ) as $cap => $capname)
+			foreach( array_keys(WPAA_AccessArea::get_label_array( ) ) as $cap)
 				if ( wpaa_user_can_accessarea( $cap ) )
 					$caps[] = $cap;
 		}
