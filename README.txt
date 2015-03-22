@@ -4,7 +4,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: access, role, capability, user, security, editor
 Requires at least: 3.8
 Tested up to: 4.1
-Stable tag: 1.4.2
+Stable tag: 1.4.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,6 +43,17 @@ Developers might like to have a look at [the project wiki](https://github.com/mc
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Frequently asked questions ==
+
+= Why can't I protect media? =
+
+Because the plugin can only protect posts, which are database entries. A media also contains a 
+file stored on your servers file system. A file is normally just returned by the server, the 
+WordPress core is not involved. In order to protect a file, let's say an image, the Image URL 
+would have to be point to a special Script, that decides whether the file is protected or not, 
+and if so, which user or group of users would be granted access.
+
+A lot of processing would be going on, and each and every little thumbnail would add another 
+one or two seconds to your page load time. The result: Tears, rage and support requests.
 
 = What does it exactly do? =
 
@@ -109,6 +120,10 @@ I will migrate all the translation stuff there.
 4. Post Access Behaviour
 
 == Changelog ==
+
+= 1.4.3 =
+ - Fix: Post Custom behavior not dispalying in metabox when fallback page is default fb page
+ - Fix: invalid login redirect URI in subdirectory installs
 
 = 1.4.2 =
  - Fix: no restrictions for empty post objects (fixes buddypress profile page issue)
